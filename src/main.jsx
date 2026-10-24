@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter basename="/IRON-LEDGER">
         <ToastProvider>
           <AuthProvider>
             <App />
