@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="shoulders">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a3142"/><stop offset="1" stop-color="#171b25"/></linearGradient></defs>
+<rect width="400" height="300" fill="url(#g)"/>
+<circle cx="200" cy="150" r="118" fill="none" stroke="#566079" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 8"/>
+<g transform="translate(16 -6) scale(.92)"><circle cx="200" cy="62" r="22" fill="#3a4256"/><rect x="192" y="82" width="16" height="12" fill="#3a4256"/><rect x="150" y="92" width="100" height="100" rx="18" fill="#3a4256"/><circle cx="138" cy="104" r="20" fill="#e8590c"/><circle cx="262" cy="104" r="20" fill="#e8590c"/><rect x="116" y="100" width="30" height="86" rx="14" fill="#3a4256"/><rect x="254" y="100" width="30" height="86" rx="14" fill="#3a4256"/><circle cx="138" cy="104" r="20" fill="#e8590c"/><circle cx="262" cy="104" r="20" fill="#e8590c"/><rect x="156" y="196" width="40" height="46" rx="14" fill="#3a4256"/><rect x="160" y="238" width="32" height="46" rx="12" fill="#3a4256"/><rect x="204" y="196" width="40" height="46" rx="14" fill="#3a4256"/><rect x="208" y="238" width="32" height="46" rx="12" fill="#3a4256"/></g>
+<text x="200" y="292" text-anchor="middle" font-family="Oswald, Arial, sans-serif" font-size="15" letter-spacing="4" fill="#efece3" fill-opacity=".8">SHOULDERS</text>
+</svg>

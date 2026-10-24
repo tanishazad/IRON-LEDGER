@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Ledger — Personal Fitness & Workout Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141821;
+    --plate:#1c212c;
+    --plate-2:#232937;
+    --chalk:#efece3;
+    --chalk-dim:#a4a9b6;
+    --iron:#e8590c;
+    --iron-dim:#c94e0c;
+    --teal:#4c9a8e;
+    --line:#2c3242;
+    --danger:#c94747;
+    --radius:10px;
+    --display: 'Oswald', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--iron); color:var(--ink);}
+
+  /* ---------- Layout ---------- */
+  .app{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:220px; flex-shrink:0;
+    background:var(--plate);
+    border-right:1px solid var(--line);
+    padding:28px 18px;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{
+    font-family:var(--display); font-weight:700; letter-spacing:.5px;
+    font-size:1.35rem; text-transform:uppercase; color:var(--chalk);
+    margin-bottom:2px;
+  }
+  .brand span{color:var(--iron);}
+  .tagline{font-size:.7rem; color:var(--chalk-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:34px;}
+
+  nav{display:flex; flex-direction:column; gap:4px;}
+  .nav-btn{
+    display:flex; align-items:center; gap:10px;
+    background:transparent; border:none; color:var(--chalk-dim);
+    font-family:var(--display); font-size:.92rem; letter-spacing:.03em; text-transform:uppercase;
+    padding:11px 12px; border-radius:8px; cursor:pointer; text-align:left;
+    transition:background .15s, color .15s;
+  }
+  .nav-btn .num{font-family:var(--mono); font-size:.7rem; opacity:.6; width:16px;}
+  .nav-btn:hover{background:var(--plate-2); color:var(--chalk);}
+  .nav-btn.active{background:var(--iron); color:var(--ink); font-weight:600;}
+  .nav-btn.active .num{opacity:.85;}
+
+  main{flex:1; padding:38px 44px; max-width:980px;}
+  .view{display:none;}
+  .view.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  h1{font-family:var(--display); text-transform:uppercase; font-size:1.7rem; letter-spacing:.03em; margin-bottom:4px;}
+  .sub{color:var(--chalk-dim); font-size:.88rem; margin-bottom:28px;}
+
+  .card{
+    background:var(--plate); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 24px; margin-bottom:20px;
+  }
+  .card h2{font-family:var(--display); text-transform:uppercase; font-size:1rem; letter-spacing:.04em; margin-bottom:14px; color:var(--chalk);}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px;}
+
+  /* stat tiles */
+  .stat{
+    background:var(--plate-2); border-radius:8px; padding:16px 18px; border:1px solid var(--line);
+  }
+  .stat .label{font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--chalk-dim); margin-bottom:6px;}
+  .stat .value{font-family:var(--mono); font-size:1.6rem; color:var(--chalk); font-weight:700;}
+  .stat .value.accent{color:var(--iron);}
+
+  /* Barbell signature visual */
+  .barbell-wrap{padding:26px 10px 10px; overflow-x:auto;}
+  .barbell{display:flex; align-items:center; justify-content:center; min-width:520px; gap:0;}
+  .bar{height:6px; background:linear-gradient(90deg,#5a5f6b,#8b909c,#5a5f6b); flex:1; max-width:220px; border-radius:2px;}
+  .plates{display:flex; align-items:center;}
+  .plates.left{flex-direction:row-reverse;}
+  .plate{
+    border-radius:6px; background:var(--plate-2); border:2px solid var(--line); margin:0 2px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:.6rem; color:var(--chalk-dim);
+    transition:background .2s, border-color .2s, color .2s;
+  }
+  .plate.filled{background:var(--iron); border-color:var(--iron-dim); color:var(--ink); font-weight:700;}
+  .collar{width:10px; height:34px; background:#3a3f4c; border-radius:2px;}
+  .barbell-caption{text-align:center; color:var(--chalk-dim); font-size:.78rem; margin-top:14px; letter-spacing:.02em;}
+  .barbell-caption strong{color:var(--chalk); font-family:var(--mono);}
+
+  /* forms */
+  label{display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--chalk-dim); margin-bottom:5px;}
+  input, select{
+    width:100%; background:var(--ink); border:1px solid var(--line); color:var(--chalk);
+    padding:9px 11px; border-radius:6px; font-family:var(--body); font-size:.9rem; margin-bottom:12px;
+  }
+  input:focus, select:focus{outline:2px solid var(--iron); outline-offset:1px; border-color:var(--iron);}
+  input[type=number]{font-family:var(--mono);}
+
+  .row{display:flex; gap:10px;}
+  .row > div{flex:1;}
+
+  button.btn{
+    font-family:var(--display); text-transform:uppercase; letter-spacing:.04em; font-size:.82rem;
+    background:var(--iron); color:var(--ink); border:none; padding:10px 18px; border-radius:6px;
+    cursor:pointer; font-weight:600; transition:background .15s, transform .1s;
+  }
+  button.btn:hover{background:var(--iron-dim);}
+  button.btn:active{transform:scale(.97);}
+  button.btn.ghost{background:transparent; border:1px solid var(--line); color:var(--chalk-dim);}
+  button.btn.ghost:hover{color:var(--chalk); border-color:var(--chalk-dim);}
+  button.btn.danger{background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 10px; font-size:.7rem;}
+  button.btn.small{padding:6px 12px; font-size:.72rem;}
+
+  .exercise-row{
+    display:flex; align-items:center; gap:10px; background:var(--plate-2); border:1px solid var(--line);
+    border-radius:8px; padding:10px 14px; margin-bottom:8px;
+  }
+  .exercise-row .name{flex:1; font-weight:600;}
+  .exercise-row .meta{font-family:var(--mono); font-size:.78rem; color:var(--chalk-dim);}
+
+  .empty{
+    text-align:center; padding:38px 20px; color:var(--chalk-dim); border:1px dashed var(--line); border-radius:var(--radius);
+  }
+  .empty .big{font-family:var(--display); font-size:1rem; text-transform:uppercase; color:var(--chalk); margin-bottom:6px;}
+
+  .routine-pill{
+    display:inline-flex; align-items:center; gap:6px; background:var(--plate-2); border:1px solid var(--line);
+    padding:5px 10px; border-radius:20px; font-size:.75rem; margin-bottom:14px; color:var(--chalk-dim);
+  }
+  .routine-pill b{color:var(--chalk);}
+
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  th, td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line);}
+  th{text-transform:uppercase; font-size:.68rem; letter-spacing:.06em; color:var(--chalk-dim); font-weight:600;}
+  td{font-family:var(--mono);}
+  td.name-col{font-family:var(--body);}
+
+  .set-input-row{display:grid; grid-template-columns:32px 1fr 1fr 30px; gap:8px; align-items:center; margin-bottom:6px;}
+  .set-input-row .idx{font-family:var(--mono); color:var(--chalk-dim); font-size:.8rem;}
+  .set-input-row input{margin-bottom:0;}
+  .remove-set{background:transparent; border:none; color:var(--chalk-dim); cursor:pointer; font-size:1rem;}
+  .remove-set:hover{color:var(--danger);}
+
+  .log-exercise-block{border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:14px; background:var(--plate-2);}
+  .log-exercise-block h3{font-family:var(--display); text-transform:uppercase; font-size:.9rem; margin-bottom:10px; letter-spacing:.03em;}
+
+  .chart-wrap{background:var(--plate-2); border-radius:8px; padding:16px; border:1px solid var(--line); margin-bottom:16px;}
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; background:var(--iron); color:var(--ink); padding:12px 18px;
+    border-radius:8px; font-family:var(--display); text-transform:uppercase; font-size:.82rem; letter-spacing:.03em;
+    box-shadow:0 8px 24px rgba(0,0,0,.4); opacity:0; transform:translateY(10px); pointer-events:none;
+    transition:opacity .2s, transform .2s; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+
+  @media (max-width:760px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; padding:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+    .tagline{display:none;}
+    .brand{margin-bottom:0;}
+    nav{flex-direction:row; flex-wrap:wrap; gap:6px;}
+    main{padding:22px 18px;}
+  }
+
+  /* ---------- Login / Signup ---------- */
+  #auth-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(232,89,12,0.08), transparent 45%),
+      var(--ink);
+  }
+  .auth-card{
+    width:100%; max-width:380px; background:var(--plate); border:1px solid var(--line);
+    border-radius:var(--radius); padding:34px 30px;
+  }
+  .auth-brand{
+    font-family:var(--display); text-transform:uppercase; font-weight:700; font-size:1.5rem;
+    text-align:center; margin-bottom:4px;
+  }
+  .auth-brand span{color:var(--iron);}
+  .auth-sub{text-align:center; color:var(--chalk-dim); font-size:.8rem; margin-bottom:26px; letter-spacing:.03em;}
+  .auth-tabs{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:22px;}
+  .auth-tab{
+    flex:1; background:transparent; border:none; color:var(--chalk-dim); padding:9px 0;
+    font-family:var(--display); text-transform:uppercase; font-size:.78rem; letter-spacing:.04em; cursor:pointer;
+  }
+  .auth-tab.active{background:var(--iron); color:var(--ink); font-weight:600;}
+  .auth-error{
+    display:none; background:rgba(201,71,71,.12); border:1px solid var(--danger); color:#e9a3a3;
+    font-size:.8rem; padding:9px 12px; border-radius:6px; margin-bottom:14px;
+  }
+  .auth-error.show{display:block;}
+  #auth-signup-fields{display:none;}
+  .auth-card button.btn{width:100%; padding:11px 0; margin-top:4px;}
+  .auth-hint{text-align:center; color:var(--chalk-dim); font-size:.72rem; margin-top:18px; line-height:1.5;}
+
+  .user-pill{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:var(--plate-2); border:1px solid var(--line); border-radius:8px;
+    padding:9px 12px; margin-bottom:16px; font-size:.78rem; color:var(--chalk-dim);
+  }
+  .user-pill b{color:var(--chalk); font-family:var(--mono);}
+  .user-pill button{
+    background:transparent; border:none; color:var(--iron); font-family:var(--display);
+    text-transform:uppercase; font-size:.68rem; letter-spacing:.03em; cursor:pointer;
+  }
+  .user-pill button:hover{text-decoration:underline;}
+  #app-shell{display:none;}
+
+  /* social login buttons */
+  .social-btns{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+  .social-btn{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    width:100%; padding:10px 0; border-radius:6px; border:1px solid var(--line);
+    background:var(--plate-2); color:var(--chalk); font-family:var(--body); font-weight:600;
+    font-size:.85rem; cursor:pointer; transition:background .15s, border-color .15s;
+  }
+  .social-btn:hover{background:#2a3140; border-color:var(--chalk-dim);}
+  .social-btn svg{flex-shrink:0;}
+  .social-btn.google:hover{border-color:#4285F4;}
+  .social-btn.facebook:hover{border-color:#1877F2;}
+
+  .auth-divider{
+    display:flex; align-items:center; gap:12px; margin:4px 0 18px;
+    color:var(--chalk-dim); font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;
+  }
+  .auth-divider::before, .auth-divider::after{
+    content:''; flex:1; height:1px; background:var(--line);
+  }
+
+  .auth-note{
+    background:var(--plate-2); border:1px solid var(--line); border-radius:6px;
+    padding:9px 11px; font-size:.7rem; color:var(--chalk-dim); line-height:1.5; margin-top:14px;
+  }
+  .auth-note b{color:var(--chalk);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN / SIGNUP -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">Iron<span>Ledger</span></div>
+    <div class="auth-sub">Sign in to load your training log</div>
+
+    <div class="auth-tabs" role="tablist" aria-label="Sign in or create an account">
+      <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true" onclick="switchAuthTab('login')">Log In</button>
+      <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <div class="auth-error" id="auth-error" role="alert"></div>
+
+    <div class="social-btns">
+      <button type="button" class="social-btn google" onclick="socialLogin('google')">
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.98v2.33A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.17.29-1.7V4.97H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.03l2.97-2.33z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .98 4.97l2.97 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <button type="button" class="social-btn facebook" onclick="socialLogin('facebook')">
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#1877F2" d="M18 9a9 9 0 1 0-10.4 8.89v-6.29H5.31V9h2.29V7.02c0-2.26 1.35-3.51 3.41-3.51.99 0 2.02.18 2.02.18v2.22h-1.14c-1.12 0-1.47.7-1.47 1.42V9h2.5l-.4 2.6h-2.1v6.29A9 9 0 0 0 18 9z"/>
+        </svg>
+        Continue with Facebook
+      </button>
+    </div>
+
+    <div class="auth-divider">or use email</div>
+
+    <form id="auth-form" onsubmit="return handleAuthSubmit(event)">
+      <label for="auth-username">Username</label>
+      <input id="auth-username" type="text" autocomplete="username" placeholder="e.g. ironmike" required>
+
+      <div id="auth-signup-fields">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com">
+      </div>
+
+      <label for="auth-password">Password</label>
+      <input id="auth-password" type="password" autocomplete="current-password" placeholder="At least 6 characters" required minlength="6">
+
+      <button type="submit" class="btn" id="auth-submit-btn">Log In</button>
+    </form>
+
+    <div class="auth-note">
+      This is a front-end demo: email accounts are stored in <b>your browser's localStorage</b>, and Google/Facebook are <b>simulated</b> — no real OAuth call is made. A production version would need a backend to verify tokens from Google/Facebook's actual sign-in APIs.
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app-shell">
+  <aside class="sidebar">
+    <div class="brand">Iron<span>Ledger</span></div>
+    <div class="tagline">Log it. Lift it. Track it.</div>
+    <div class="user-pill">
+      <span>Signed in as <b id="current-username">—</b></span>
+      <button onclick="logout()">Log Out</button>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-view="dashboard"><span class="num">01</span>Dashboard</button>
+      <button class="nav-btn" data-view="routines"><span class="num">02</span>Routines</button>
+      <button class="nav-btn" data-view="log"><span class="num">03</span>Log Workout</button>
+      <button class="nav-btn" data-view="progress"><span class="num">04</span>Progress</button>
+    </nav>
+  </aside>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <h1>Dashboard</h1>
+      <div class="sub" id="today-label"></div>
+
+      <div class="card">
+        <h2>Today's Loading</h2>
+        <div class="barbell-wrap">
+          <div class="barbell" id="barbell"></div>
+        </div>
+        <div class="barbell-caption" id="barbell-caption"></div>
+      </div>
+
+      <div class="grid">
+        <div class="stat"><div class="label">Total Workouts</div><div class="value" id="stat-total">0</div></div>
+        <div class="stat"><div class="label">Current Streak</div><div class="value accent" id="stat-streak">0</div></div>
+        <div class="stat"><div class="label">Routines Built</div><div class="value" id="stat-routines">0</div></div>
+        <div class="stat"><div class="label">Logged This Week</div><div class="value" id="stat-week">0</div></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h2>Recent Entries</h2>
+        <div id="recent-entries"></div>
+      </div>
+    </section>
+
+    <!-- ROUTINES -->
+    <section class="view" id="view-routines">
+      <h1>Routines</h1>
+      <div class="sub">Build the sessions you'll come back to — name it, load it with exercises, save it.</div>
+
+      <div class="card">
+        <h2>New Routine</h2>
+        <label for="routine-name">Routine name</label>
+        <input id="routine-name" type="text" placeholder="e.g. Push Day, Leg Day, Full Body A">
+        <div id="draft-exercises"></div>
+        <div class="row">
+          <div><label for="ex-name">Exercise</label><input id="ex-name" type="text" list="exercise-suggestions" placeholder="e.g. Bench Press" autocomplete="off"></div>
+          <div style="max-width:110px;"><label for="ex-sets">Sets</label><input id="ex-sets" type="number" min="1" value="3"></div>
+          <div style="max-width:110px;"><label for="ex-reps">Reps</label><input id="ex-reps" type="number" min="1" value="10"></div>
+        </div>
+        <datalist id="exercise-suggestions"></datalist>
+        <button class="btn ghost small" onclick="addDraftExercise()">+ Add Exercise</button>
+        <div style="margin-top:16px;"><button class="btn" onclick="saveRoutine()">Save Routine</button></div>
+      </div>
+
+      <div class="card">
+        <h2>Your Routines</h2>
+        <div id="routine-list"></div>
+      </div>
+    </section>
+
+    <!-- LOG WORKOUT -->
+    <section class="view" id="view-log">
+      <h1>Log Workout</h1>
+      <div class="sub">Pick a routine and record what actually happened today.</div>
+
+      <div class="card">
+        <label for="log-routine">Routine</label>
+        <select id="log-routine" onchange="renderLogForm()"></select>
+        <label for="log-date">Date</label>
+        <input id="log-date" type="date">
+        <div id="log-exercises"></div>
+        <button class="btn" id="log-save-btn" onclick="saveLog()" style="margin-top:6px;">Save Entry</button>
+      </div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="view" id="view-progress">
+      <h1>Progress</h1>
+      <div class="sub">Top set weight over time, by exercise.</div>
+
+      <div class="card">
+        <label for="progress-exercise">Exercise</label>
+        <select id="progress-exercise" onchange="renderProgress()"></select>
+        <div class="chart-wrap" id="chart-wrap">
+          <canvas id="progress-canvas" height="260"></canvas>
+        </div>
+        <div id="progress-table-wrap"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<!-- ES6 module: imports loadExerciseLibrary() from js/exerciseLibrary.js and
+     fetches data/exercises.json with async/await. Requires the page to be
+     served over http:// (Live Server, `npx serve .`, etc.) -->
+<script type="module">
+  import { loadExerciseLibrary } from './js/exerciseLibrary.js';
+
+  (async function populateExerciseSuggestions() {
+    const exercises = await loadExerciseLibrary();
+    const datalist = document.getElementById('exercise-suggestions');
+    datalist.innerHTML = exercises
+      .map(ex => `<option value="${ex.name}">${ex.muscle}</option>`)
+      .join('');
+  })();
+</script>
+
+<script>
+/* ---------- Auth ---------- */
+const USERS_KEY = 'ironledger_users_v1';
+const SESSION_KEY = 'ironledger_session_v1';
+let authMode = 'login';
+
+function loadUsers(){
+  try{
+    const raw = localStorage.getItem(USERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ console.error('User load failed', e); return []; }
+}
+function saveUsers(users){
+  try{ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  catch(e){ console.error('User save failed', e); }
+}
+function setSession(username){
+  try{ localStorage.setItem(SESSION_KEY, username); }
+  catch(e){ console.error('Session save failed', e); }
+}
+function getSession(){
+  try{ return localStorage.getItem(SESSION_KEY); }
+  catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+}
+
+function switchAuthTab(mode){
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+  document.getElementById('tab-login').setAttribute('aria-selected', mode==='login');
+  document.getElementById('tab-signup').setAttribute('aria-selected', mode==='signup');
+  document.getElementById('auth-signup-fields').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById('auth-submit-btn').textContent = mode==='signup' ? 'Create Account' : 'Log In';
+  document.getElementById('auth-form').reset();
+  hideAuthError();
+}
+function showAuthError(msg){
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideAuthError(){
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function socialLogin(provider){
+  hideAuthError();
+  // Simulated OAuth: a real integration would redirect to the provider,
+  // receive a token, and verify it on a backend server (outside this
+  // front-end-only project). Here we just create/reuse a demo account
+  // so the flow can be tried end-to-end.
+  const displayName = provider === 'google' ? 'Google User' : 'Facebook User';
+  const demoUsername = `${provider}_demo_user`;
+  const users = loadUsers();
+  let account = users.find(u=>u.username===demoUsername);
+  if(!account){
+    account = { username: demoUsername, email: `${provider}.demo@example.com`, password: null, provider, displayName };
+    users.push(account);
+    saveUsers(users);
+  }
+  setSession(demoUsername);
+  enterApp(demoUsername);
+  showToast(`Signed in with ${provider === 'google' ? 'Google' : 'Facebook'} (simulated)`);
+}
+
+function handleAuthSubmit(evt){
+  evt.preventDefault();
+  hideAuthError();
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const users = loadUsers();
+
+  if(authMode === 'signup'){
+    const email = document.getElementById('auth-email').value.trim();
+    if(users.some(u=>u.username.toLowerCase()===username.toLowerCase())){
+      showAuthError('That username is already taken.');
+      return false;
+    }
+    users.push({ username, email, password });
+    saveUsers(users);
+    setSession(username);
+    enterApp(username);
+    showToast('Account created — welcome!');
+  } else {
+    const match = users.find(u=> u.username.toLowerCase()===username.toLowerCase() && u.password===password);
+    if(!match){
+      showAuthError('Username or password is incorrect.');
+      return false;
+    }
+    setSession(username);
+    enterApp(username);
+    showToast('Welcome back');
+  }
+  return false;
+}
+
+function logout(){
+  clearSession();
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-form').reset();
+  switchAuthTab('login');
+}
+
+function enterApp(username){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'flex';
+  const users = loadUsers();
+  const account = users.find(u=>u.username===username);
+  document.getElementById('current-username').textContent = (account && account.displayName) || username;
+  renderDashboard();
+  renderRoutineList();
+}
+
+/* ---------- Storage ---------- */
+const STORE_KEY = 'ironledger_data_v1';
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return { routines: [], logs: [] };
+    return JSON.parse(raw);
+  }catch(e){
+    console.error('Load failed, starting fresh.', e);
+    return { routines: [], logs: [] };
+  }
+}
+function saveData(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error('Save failed', e);
+    showToast('Could not save — storage unavailable');
+  }
+}
+
+let state = loadData();
+let draftExercises = [];
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------- Nav ---------- */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    if(btn.dataset.view==='dashboard') renderDashboard();
+    if(btn.dataset.view==='log') renderLogView();
+    if(btn.dataset.view==='progress') renderProgressView();
+    if(btn.dataset.view==='routines') renderRoutineList();
+  });
+});
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const todayEl = document.getElementById('today-label');
+  const today = new Date();
+  todayEl.textContent = today.toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  document.getElementById('stat-total').textContent = state.logs.length;
+  document.getElementById('stat-routines').textContent = state.routines.length;
+
+  // streak: consecutive days (including today or most recent) with a logged entry
+  const dates = [...new Set(state.logs.map(l=>l.date))].sort().reverse();
+  let streak = 0;
+  let cursor = new Date();
+  cursor.setHours(0,0,0,0);
+  for(let i=0;i<dates.length;i++){
+    const d = new Date(dates[i]+'T00:00:00');
+    const diff = Math.round((cursor - d)/86400000);
+    if(diff===0 || diff===1){ streak++; cursor = d; }
+    else break;
+  }
+  document.getElementById('stat-streak').textContent = streak;
+
+  // this week count
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekCount = state.logs.filter(l=> new Date(l.date+'T00:00:00') >= weekAgo).length;
+  document.getElementById('stat-week').textContent = weekCount;
+
+  // barbell visual: fill plates based on total sets logged today
+  const todayStr = today.toISOString().slice(0,10);
+  const todayLog = state.logs.find(l=>l.date===todayStr);
+  let setsToday = 0, targetSets = 0;
+  if(todayLog){
+    todayLog.entries.forEach(e=> setsToday += e.sets.length);
+  }
+  const routine = todayLog ? state.routines.find(r=>r.id===todayLog.routineId) : null;
+  if(routine){ targetSets = routine.exercises.reduce((a,e)=>a+Number(e.targetSets||0),0); }
+  if(!targetSets) targetSets = Math.max(setsToday, 12);
+
+  renderBarbell(setsToday, targetSets);
+
+  const capEl = document.getElementById('barbell-caption');
+  capEl.innerHTML = todayLog
+    ? `<strong>${setsToday}</strong> of <strong>${targetSets}</strong> sets loaded today — ${todayLog.routineName}`
+    : `No sets logged yet today. Head to <strong>Log Workout</strong> to get started.`;
+
+  // recent entries
+  const recentEl = document.getElementById('recent-entries');
+  const recent = [...state.logs].sort((a,b)=> b.date.localeCompare(a.date)).slice(0,5);
+  if(recent.length===0){
+    recentEl.innerHTML = `<div class="empty"><div class="big">Nothing logged yet</div>Your workout history will show up here.</div>`;
+  } else {
+    recentEl.innerHTML = recent.map(l=>{
+      const totalSets = l.entries.reduce((a,e)=>a+e.sets.length,0);
+      return `<div class="exercise-row"><div class="name">${l.routineName}</div><div class="meta">${l.date} · ${totalSets} sets</div></div>`;
+    }).join('');
+  }
+}
+
+function renderBarbell(filled, target){
+  const el = document.getElementById('barbell');
+  const perSide = Math.max(1, Math.ceil(target/2));
+  const filledPerSide = Math.ceil(filled/2);
+  const sizes = [46,40,34,28];
+
+  function plateHTML(i, isFilled){
+    const size = sizes[Math.min(i,3)];
+    return `<div class="plate ${isFilled?'filled':''}" style="width:${size*0.55}px;height:${size}px;">${isFilled?'●':''}</div>`;
+  }
+
+  let left = '<div class="plates left">';
+  let right = '<div class="plates">';
+  for(let i=0;i<perSide;i++){
+    left += plateHTML(i, i<filledPerSide);
+    right += plateHTML(i, i<filledPerSide);
+  }
+  left += '</div>'; right += '</div>';
+
+  el.innerHTML = `<div class="collar"></div>${left}<div class="bar"></div>${right}<div class="collar"></div>`;
+}
+
+/* ---------- Routines ---------- */
+function addDraftExercise(){
+  const name = document.getElementById('ex-name').value.trim();
+  const sets = document.getElementById('ex-sets').value || 3;
+  const reps = document.getElementById('ex-reps').value || 10;
+  if(!name){ showToast('Name the exercise first'); return; }
+  draftExercises.push({ id: uid(), name, targetSets: sets, targetReps: reps });
+  document.getElementById('ex-name').value = '';
+  renderDraftExercises();
+}
+function removeDraftExercise(id){
+  draftExercises = draftExercises.filter(e=>e.id!==id);
+  renderDraftExercises();
+}
+function renderDraftExercises(){
+  const el = document.getElementById('draft-exercises');
+  if(draftExercises.length===0){ el.innerHTML=''; return; }
+  el.innerHTML = draftExercises.map(e=>`
+    <div class="exercise-row">
+      <div class="name">${e.name}</div>
+      <div class="meta">${e.targetSets} × ${e.targetReps}</div>
+      <button class="btn danger" onclick="removeDraftExercise('${e.id}')">Remove</button>
+    </div>`).join('');
+}
+function saveRoutine(){
+  const name = document.getElementById('routine-name').value.trim();
+  if(!name){ showToast('Give the routine a name'); return; }
+  if(draftExercises.length===0){ showToast('Add at least one exercise'); return; }
+  state.routines.push({ id: uid(), name, exercises: draftExercises });
+  saveData();
+  draftExercises = [];
+  document.getElementById('routine-name').value = '';
+  renderDraftExercises();
+  renderRoutineList();
+  showToast('Routine saved');
+}
+function deleteRoutine(id){
+  state.routines = state.routines.filter(r=>r.id!==id);
+  saveData();
+  renderRoutineList();
+}
+function renderRoutineList(){
+  const el = document.getElementById('routine-list');
+  if(state.routines.length===0){
+    el.innerHTML = `<div class="empty"><div class="big">No routines yet</div>Create one above to start logging workouts.</div>`;
+    return;
+  }
+  el.innerHTML = state.routines.map(r=>`
+    <div class="exercise-row" style="align-items:flex-start; flex-direction:column; gap:6px;">
+      <div style="display:flex; width:100%; align-items:center; gap:10px;">
+        <div class="name">${r.name}</div>
+        <div class="meta">${r.exercises.length} exercises</div>
+        <button class="btn danger" onclick="deleteRoutine('${r.id}')">Delete</button>
+      </div>
+      <div class="meta" style="opacity:.85;">${r.exercises.map(e=>e.name+' ('+e.targetSets+'×'+e.targetReps+')').join(' · ')}</div>
+    </div>`).join('');
+}
+
+/* ---------- Log Workout ---------- */
+function renderLogView(){
+  const sel = document.getElementById('log-routine');
+  sel.innerHTML = state.routines.length
+    ? state.routines.map(r=>`<option value="${r.id}">${r.name}</option>`).join('')
+    : `<option value="">No routines yet</option>`;
+  document.getElementById('log-date').valueAsDate = new Date();
+  renderLogForm();
+}
+function renderLogForm(){
+  const routineId = document.getElementById('log-routine').value;
+  const routine = state.routines.find(r=>r.id===routineId);
+  const el = document.getElementById('log-exercises');
+  const saveBtn = document.getElementById('log-save-btn');
+  if(!routine){
+    el.innerHTML = `<div class="empty"><div class="big">Build a routine first</div>Go to Routines to create one, then come back here to log it.</div>`;
+    saveBtn.style.display = 'none';
+    return;
+  }
+  saveBtn.style.display = 'inline-block';
+  el.innerHTML = routine.exercises.map(ex=>`
+    <div class="log-exercise-block" data-ex="${ex.name}">
+      <h3>${ex.name} <span style="color:var(--chalk-dim); font-family:var(--mono); font-size:.75rem;">target ${ex.targetSets}×${ex.targetReps}</span></h3>
+      <div class="sets-container" id="sets-${ex.id}"></div>
+      <button class="btn ghost small" onclick="addSetRow('${ex.id}')">+ Add Set</button>
+    </div>`).join('');
+  routine.exercises.forEach(ex=>{
+    for(let i=0;i<Number(ex.targetSets||3);i++) addSetRow(ex.id, false);
+  });
+}
+function addSetRow(exId, focus=true){
+  const container = document.getElementById('sets-'+exId);
+  const idx = container.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'set-input-row';
+  row.innerHTML = `
+    <div class="idx">#${idx}</div>
+    <input type="number" placeholder="Reps" min="0" class="reps-input">
+    <input type="number" placeholder="Weight (kg)" min="0" step="0.5" class="weight-input">
+    <button class="remove-set" onclick="this.parentElement.remove()" title="Remove set">✕</button>`;
+  container.appendChild(row);
+}
+function saveLog(){
+  const routineId = document.getElementById('log-routine').value;
+  const routine = state.routines.find(r=>r.id===routineId);
+  if(!routine){ showToast('Pick a routine first'); return; }
+  const date = document.getElementById('log-date').value || new Date().toISOString().slice(0,10);
+
+  const entries = routine.exercises.map(ex=>{
+    const container = document.getElementById('sets-'+ex.id);
+    const sets = [...container.children].map(row=>{
+      const reps = row.querySelector('.reps-input').value;
+      const weight = row.querySelector('.weight-input').value;
+      return { reps: Number(reps)||0, weight: Number(weight)||0 };
+    }).filter(s=> s.reps>0 || s.weight>0);
+    return { exerciseName: ex.name, sets };
+  }).filter(e=>e.sets.length>0);
+
+  if(entries.length===0){ showToast('Log at least one set'); return; }
+
+  state.logs = state.logs.filter(l=> !(l.date===date && l.routineId===routineId));
+  state.logs.push({ id: uid(), date, routineId, routineName: routine.name, entries });
+  saveData();
+  showToast('Workout logged');
+  renderLogForm();
+}
+
+/* ---------- Progress ---------- */
+function renderProgressView(){
+  const sel = document.getElementById('progress-exercise');
+  const names = new Set();
+  state.logs.forEach(l=> l.entries.forEach(e=> names.add(e.exerciseName)));
+  const list = [...names];
+  sel.innerHTML = list.length
+    ? list.map(n=>`<option value="${n}">${n}</option>`).join('')
+    : `<option value="">No data yet</option>`;
+  renderProgress();
+}
+
+let progressChart = null;
+function renderProgress(){
+  const exName = document.getElementById('progress-exercise').value;
+  const wrap = document.getElementById('progress-table-wrap');
+
+  if(!exName){
+    if(progressChart){ progressChart.destroy(); progressChart = null; }
+    wrap.innerHTML = `<div class="empty"><div class="big">No progress data yet</div>Log a few workouts to see trends here.</div>`;
+    return;
+  }
+
+  const points = [];
+  state.logs
+    .filter(l=> l.entries.some(e=>e.exerciseName===exName))
+    .sort((a,b)=> a.date.localeCompare(b.date))
+    .forEach(l=>{
+      const entry = l.entries.find(e=>e.exerciseName===exName);
+      const topWeight = Math.max(...entry.sets.map(s=>s.weight));
+      const totalVolume = entry.sets.reduce((a,s)=>a+s.reps*s.weight,0);
+      points.push({ date: l.date, topWeight, totalVolume });
+    });
+
+  const canvas = document.getElementById('progress-canvas');
+  if(progressChart){ progressChart.destroy(); }
+  progressChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: points.map(p=>p.date.slice(5)),
+      datasets: [{
+        label: 'Top Set (kg)',
+        data: points.map(p=>p.topWeight),
+        borderColor: '#e8590c',
+        backgroundColor: 'rgba(232,89,12,0.15)',
+        borderWidth: 2.5,
+        pointRadius: 4,
+        pointBackgroundColor: '#141821',
+        tension: 0.25,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display:false }, ticks: { font:{ family:'Space Mono', size:10 }, color:'#a4a9b6' } },
+        y: { grid: { color:'#2c3242' }, ticks: { font:{ family:'Space Mono', size:10 }, color:'#a4a9b6' } }
+      }
+    }
+  });
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Top Set (kg)</th><th>Total Volume</th></tr></thead>
+      <tbody>
+        ${points.slice().reverse().map(p=>`<tr><td class="name-col">${p.date}</td><td>${p.topWeight}</td><td>${p.totalVolume}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ---------- Init ---------- */
+const existingSession = getSession();
+if(existingSession){
+  enterApp(existingSession);
+} else {
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
